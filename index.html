@@ -18,18 +18,38 @@
           <div id="suggestion-list" aria-hidden="true"></div>
         </div>
         <button id="search-btn">Search</button>
+        <button id="voice-btn" title="Voice Search"><i class="fas fa-microphone"></i></button>
         <button id="location-btn" title="Use Current Location"><i class="fas fa-map-marker-alt"></i></button>
+        <button id="unit-toggle" title="Toggle Units (°C/°F)">°C</button>
+      </div>
+
+      <div class="pinned-locations" id="pinned-locations">
+        <h3>Pinned Locations</h3>
+        <div id="pinned-list"></div>
       </div>
     </header>
 
     <main>
       <div class="weather-card">
-        <div class="weather-icon"></div>
-        <div id="day-night-icon"></div>
-        <h2 class="city-name">New York</h2>
-        <p class="temperature">25°C</p>
-        <p class="condition">Cloudy</p>
-
+        <div class="loading-spinner" id="weather-spinner" style="display: none;"></div>
+        <div class="weather-content" id="weather-content">
+          <div class="weather-icon"></div>
+          <div id="day-night-icon"></div>
+          <h2 class="city-name">New York</h2>
+          <p class="temperature">25°C</p>
+          <p class="condition">Cloudy</p>
+          <button id="pin-btn" title="Pin this location"><i class="fas fa-thumbtack"></i> Pin Location</button>
+          <div class="sun-times">
+            <div class="detail-box">
+              <i class="fas fa-sun"></i>
+              <p>Sunrise: <span id="sunrise">6:30 AM</span></p>
+            </div>
+            <div class="detail-box">
+              <i class="fas fa-moon"></i>
+              <p>Sunset: <span id="sunset">7:45 PM</span></p>
+            </div>
+          </div>
+        </div>
         <div class="details">
           <div class="detail-box">
             <i class="fas fa-tint"></i>
@@ -59,20 +79,21 @@
             <i class="fas fa-cloud-rain"></i>
             <p>Precipitation: <span id="precipitation">0 mm</span></p>
           </div>
-          <div class="detail-box">
-            <i class="fas fa-sun"></i>
-            <p>Sunrise: <span id="sunrise">6:30 AM</span></p>
-          </div>
-          <div class="detail-box">
-            <i class="fas fa-moon"></i>
-            <p>Sunset: <span id="sunset">7:45 PM</span></p>
-          </div>
+          <div class="detail-box" id="aqi-box">
+            <i class="fas fa-wind"></i>
+            <p>AQI: <span id="aqi">Loading...</span></p>
+            <p>PM2.5: <span id="pm25">--</span> µg/m³</p>
+            <p>PM10: <span id="pm10">--</span> µg/m³</p>
+          </div>        
         </div>
       </div>
 
       <section class="forecast">
         <h3>Next 5 Days</h3>
-        <div class="forecast-grid" id="forecast-grid"></div>
+        <div class="loading-spinner" id="forecast-spinner" style="display: none;"></div>
+        <div class="forecast-content" id="forecast-content">
+          <div class="forecast-grid" id="forecast-grid"></div>
+        </div>
       </section>
     </main>
   </div>
