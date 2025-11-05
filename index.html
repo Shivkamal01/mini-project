@@ -18,12 +18,14 @@
           <div id="suggestion-list" aria-hidden="true"></div>
         </div>
         <button id="search-btn">Search</button>
+        <button id="location-btn" title="Use Current Location"><i class="fas fa-map-marker-alt"></i></button>
       </div>
     </header>
 
     <main>
       <div class="weather-card">
-        <img src="https://cdn-icons-png.flaticon.com/512/1163/1163661.png" alt="Weather Icon" class="weather-icon">
+        <div class="weather-icon"></div>
+        <div id="day-night-icon"></div>
         <h2 class="city-name">New York</h2>
         <p class="temperature">25°C</p>
         <p class="condition">Cloudy</p>
@@ -48,6 +50,22 @@
           <div class="detail-box">
             <i class="fas fa-thermometer-half"></i>
             <p>Feels Like: <span id="feels-like">25°C</span></p>
+          </div>
+          <div class="detail-box">
+            <i class="fas fa-sun"></i>
+            <p>UV Index: <span id="uv-index">5</span></p>
+          </div>
+          <div class="detail-box">
+            <i class="fas fa-cloud-rain"></i>
+            <p>Precipitation: <span id="precipitation">0 mm</span></p>
+          </div>
+          <div class="detail-box">
+            <i class="fas fa-sun"></i>
+            <p>Sunrise: <span id="sunrise">6:30 AM</span></p>
+          </div>
+          <div class="detail-box">
+            <i class="fas fa-moon"></i>
+            <p>Sunset: <span id="sunset">7:45 PM</span></p>
           </div>
         </div>
       </div>
