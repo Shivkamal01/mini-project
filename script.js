@@ -61,24 +61,31 @@
     });
 
     async function fetchCitySuggestions(query) {
+      console.log("Fetching suggestions for query:", query);
       try {
         const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=6&appid=${apiKey}`;
+        console.log("Request URL:", url);
         const res = await fetch(url);
+        console.log("Response status:", res.status);
         if (!res.ok) {
+          console.error("API response not ok:", res.status, res.statusText);
           suggestionList.innerHTML = "";
           showSuggestions(false);
           return;
         }
         const cities = await res.json();
+        console.log("Cities received:", cities);
         suggestionList.innerHTML = "";
 
         if (!cities || cities.length === 0) {
+          console.log("No cities found");
           showSuggestions(false);
           return;
         }
 
         cities.forEach(city => {
           const label = `${city.name}${city.state ? ', ' + city.state : ''}, ${city.country}`;
+          console.log("Adding suggestion:", label);
           const item = document.createElement("div");
           item.className = "suggestion-item";
           item.innerHTML = `<span>${label}</span><small>lat:${city.lat.toFixed(2)}, lon:${city.lon.toFixed(2)}</small>`;
@@ -96,10 +103,17 @@
         });
 
         showSuggestions(true);
+        console.log("Suggestions displayed");
       } catch (err) {
-        console.error("Suggestion error:", err);
-        suggestionList.innerHTML = "";
-        showSuggestions(false);
+        console.error("Suggestion fetch error:", err);
+        if (err instanceof TypeError) {
+          suggestionList.innerHTML = "<div class='suggestion-item'>Network error. Unable to load suggestions.</div>";
+          showSuggestions(true);
+        } else {
+          console.error("Suggestion error:", err);
+          suggestionList.innerHTML = "";
+          showSuggestions(false);
+        }
       }
     }
 
@@ -139,8 +153,12 @@
         const label = `${c.name}${c.state ? ', ' + c.state : ''}, ${c.country}`;
         getWeatherByCoords(c.lat, c.lon, label);
       } catch (err) {
-        console.error("Resolve error:", err);
-        alert("Unable to find city. Try again.");
+        if (err instanceof TypeError) {
+          alert("Network error. Please check your internet connection.");
+        } else {
+          console.error("Resolve error:", err);
+          alert("Unable to find city. Try again.");
+        }
       }
     }
 
@@ -175,15 +193,27 @@
         getForecastByCoords(lat, lon);
       } catch (err) {
         console.error("getWeatherByCoords error:", err);
-        cityNameEl.textContent = "City not found";
-        temperatureEl.textContent = "--°C";
-        conditionEl.textContent = "--";
-        humidityEl.textContent = "--%";
-        windEl.textContent = "-- km/h";
-        pressureEl.textContent = "-- hPa";
-        visibilityEl.textContent = "-- km";
-        feelsLikeEl.textContent = "--°C";
-        weatherIcon.innerHTML = '<i class="fas fa-question"></i>';
+        if (err instanceof TypeError) {
+          cityNameEl.textContent = "Network error";
+          temperatureEl.textContent = "Check connection";
+          conditionEl.textContent = "--";
+          humidityEl.textContent = "--%";
+          windEl.textContent = "-- km/h";
+          pressureEl.textContent = "-- hPa";
+          visibilityEl.textContent = "-- km";
+          feelsLikeEl.textContent = "--°C";
+          weatherIcon.innerHTML = '<i class="fas fa-wifi"></i>';
+        } else {
+          cityNameEl.textContent = "City not found";
+          temperatureEl.textContent = "--°C";
+          conditionEl.textContent = "--";
+          humidityEl.textContent = "--%";
+          windEl.textContent = "-- km/h";
+          pressureEl.textContent = "-- hPa";
+          visibilityEl.textContent = "-- km";
+          feelsLikeEl.textContent = "--°C";
+          weatherIcon.innerHTML = '<i class="fas fa-question"></i>';
+        }
         forecastGrid.innerHTML = "";
       }
     }
@@ -225,19 +255,24 @@
           }
         }
       } catch (err) {
-        console.error("Forecast error:", err);
+        if (err instanceof TypeError) {
+          console.error("Network error in forecast:", err);
+        } else {
+          console.error("Forecast error:", err);
+        }
         forecastGrid.innerHTML = "";
       }
     }
 
     function appendForecastCard(item, dayName) {
       const iconCode = item.weather[0].icon;
+      const iconClass = getWeatherIcon(iconCode);
       const temp = Math.round(item.main.temp);
       const card = document.createElement("div");
       card.className = "day-card";
       card.innerHTML = `
         <p>${dayName}</p>
-        <img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" alt="${item.weather[0].main}">
+        <i class="${iconClass} forecast-icon"></i>
         <p>${temp}°C</p>
       `;
       forecastGrid.appendChild(card);
@@ -250,12 +285,14 @@
 
       if (isDay) {
         // Day background
+        body.className = 'day';
         body.style.background = "url('https://miro.medium.com/1*GsImz-edoeuqCMfKxDus0w.jpeg') no-repeat center center fixed";
         body.style.backgroundSize = "cover";
         dayNightIcon.className = "day";
         dayNightIcon.innerHTML = '<i class="fas fa-sun"></i>';
       } else {
         // Night background
+        body.className = 'night';
         body.style.background = "url('https://videocdn.cdnpk.net/videos/fd28bdb5-98d7-55fd-b166-956c1ee789bb/horizontal/thumbnails/large.jpg') no-repeat center center fixed";
         body.style.backgroundSize = "cover";
         dayNightIcon.className = "night";
@@ -283,7 +320,11 @@
                 getWeatherByCoords(lat, lon, "Your Location");
               }
             } catch (err) {
-              console.error("Reverse geocode error:", err);
+              if (err instanceof TypeError) {
+                console.error("Network error in reverse geocode:", err);
+              } else {
+                console.error("Reverse geocode error:", err);
+              }
               getWeatherByCoords(lat, lon, "Your Location");
             }
             suggestionList.innerHTML = "";
