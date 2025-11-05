@@ -1,5 +1,6 @@
-const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
+    const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
     const searchBtn = document.getElementById("search-btn");
+    const locationBtn = document.getElementById("location-btn");
     const cityInput = document.getElementById("city-input");
     const suggestionList = document.getElementById("suggestion-list");
 
@@ -13,6 +14,31 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
     const feelsLikeEl = document.getElementById("feels-like");
     const weatherIcon = document.querySelector(".weather-icon");
     const forecastGrid = document.getElementById("forecast-grid");
+
+    // Function to map OpenWeather icon codes to FontAwesome classes
+    function getWeatherIcon(iconCode) {
+      const map = {
+        '01d': 'fas fa-sun', // clear sky day
+        '01n': 'fas fa-moon', // clear sky night
+        '02d': 'fas fa-cloud-sun', // few clouds day
+        '02n': 'fas fa-cloud-moon', // few clouds night
+        '03d': 'fas fa-cloud', // scattered clouds
+        '03n': 'fas fa-cloud',
+        '04d': 'fas fa-cloud', // broken clouds
+        '04n': 'fas fa-cloud',
+        '09d': 'fas fa-cloud-rain', // shower rain
+        '09n': 'fas fa-cloud-rain',
+        '10d': 'fas fa-cloud-sun-rain', // rain day
+        '10n': 'fas fa-cloud-moon-rain', // rain night
+        '11d': 'fas fa-bolt', // thunderstorm
+        '11n': 'fas fa-bolt',
+        '13d': 'fas fa-snowflake', // snow
+        '13n': 'fas fa-snowflake',
+        '50d': 'fas fa-smog', // mist
+        '50n': 'fas fa-smog'
+      };
+      return map[iconCode] || 'fas fa-question';
+    }
 
     // Helper: show suggestions container only when non-empty
     function showSuggestions(show) {
@@ -35,24 +61,31 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
     });
 
     async function fetchCitySuggestions(query) {
+      console.log("Fetching suggestions for query:", query);
       try {
         const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=6&appid=${apiKey}`;
+        console.log("Request URL:", url);
         const res = await fetch(url);
+        console.log("Response status:", res.status);
         if (!res.ok) {
+          console.error("API response not ok:", res.status, res.statusText);
           suggestionList.innerHTML = "";
           showSuggestions(false);
           return;
         }
         const cities = await res.json();
+        console.log("Cities received:", cities);
         suggestionList.innerHTML = "";
 
         if (!cities || cities.length === 0) {
+          console.log("No cities found");
           showSuggestions(false);
           return;
         }
 
         cities.forEach(city => {
           const label = `${city.name}${city.state ? ', ' + city.state : ''}, ${city.country}`;
+          console.log("Adding suggestion:", label);
           const item = document.createElement("div");
           item.className = "suggestion-item";
           item.innerHTML = `<span>${label}</span><small>lat:${city.lat.toFixed(2)}, lon:${city.lon.toFixed(2)}</small>`;
@@ -70,10 +103,17 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
         });
 
         showSuggestions(true);
+        console.log("Suggestions displayed");
       } catch (err) {
-        console.error("Suggestion error:", err);
-        suggestionList.innerHTML = "";
-        showSuggestions(false);
+        console.error("Suggestion fetch error:", err);
+        if (err instanceof TypeError) {
+          suggestionList.innerHTML = "<div class='suggestion-item'>Network error. Unable to load suggestions.</div>";
+          showSuggestions(true);
+        } else {
+          console.error("Suggestion error:", err);
+          suggestionList.innerHTML = "";
+          showSuggestions(false);
+        }
       }
     }
 
@@ -113,8 +153,12 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
         const label = `${c.name}${c.state ? ', ' + c.state : ''}, ${c.country}`;
         getWeatherByCoords(c.lat, c.lon, label);
       } catch (err) {
-        console.error("Resolve error:", err);
-        alert("Unable to find city. Try again.");
+        if (err instanceof TypeError) {
+          alert("Network error. Please check your internet connection.");
+        } else {
+          console.error("Resolve error:", err);
+          alert("Unable to find city. Try again.");
+        }
       }
     }
 
@@ -136,23 +180,40 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
         feelsLikeEl.textContent = `${Math.round(data.main.feels_like)}°C`;
 
         const iconCode = data.weather[0].icon;
-        weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+        const iconClass = getWeatherIcon(iconCode);
+        weatherIcon.innerHTML = `<i class="${iconClass}"></i>`;
 
-        changeBackground(data.weather[0].main.toLowerCase());
+        // Calculate local time at the location using timezone offset
+        const localTime = new Date((data.dt + data.timezone) * 1000);
+        const localHour = localTime.getUTCHours();
+
+        changeBackground(data.weather[0].main.toLowerCase(), localHour);
 
         // Forecast using forecast endpoint with lat/lon (we still use q optional but lat/lon is better)
         getForecastByCoords(lat, lon);
       } catch (err) {
         console.error("getWeatherByCoords error:", err);
-        cityNameEl.textContent = "City not found";
-        temperatureEl.textContent = "--°C";
-        conditionEl.textContent = "--";
-        humidityEl.textContent = "--%";
-        windEl.textContent = "-- km/h";
-        pressureEl.textContent = "-- hPa";
-        visibilityEl.textContent = "-- km";
-        feelsLikeEl.textContent = "--°C";
-        weatherIcon.src = "https://cdn-icons-png.flaticon.com/512/565/565860.png";
+        if (err instanceof TypeError) {
+          cityNameEl.textContent = "Network error";
+          temperatureEl.textContent = "Check connection";
+          conditionEl.textContent = "--";
+          humidityEl.textContent = "--%";
+          windEl.textContent = "-- km/h";
+          pressureEl.textContent = "-- hPa";
+          visibilityEl.textContent = "-- km";
+          feelsLikeEl.textContent = "--°C";
+          weatherIcon.innerHTML = '<i class="fas fa-wifi"></i>';
+        } else {
+          cityNameEl.textContent = "City not found";
+          temperatureEl.textContent = "--°C";
+          conditionEl.textContent = "--";
+          humidityEl.textContent = "--%";
+          windEl.textContent = "-- km/h";
+          pressureEl.textContent = "-- hPa";
+          visibilityEl.textContent = "-- km";
+          feelsLikeEl.textContent = "--°C";
+          weatherIcon.innerHTML = '<i class="fas fa-question"></i>';
+        }
         forecastGrid.innerHTML = "";
       }
     }
@@ -194,38 +255,90 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
           }
         }
       } catch (err) {
-        console.error("Forecast error:", err);
+        if (err instanceof TypeError) {
+          console.error("Network error in forecast:", err);
+        } else {
+          console.error("Forecast error:", err);
+        }
         forecastGrid.innerHTML = "";
       }
     }
 
     function appendForecastCard(item, dayName) {
       const iconCode = item.weather[0].icon;
+      const iconClass = getWeatherIcon(iconCode);
       const temp = Math.round(item.main.temp);
       const card = document.createElement("div");
       card.className = "day-card";
       card.innerHTML = `
         <p>${dayName}</p>
-        <img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" alt="${item.weather[0].main}">
+        <i class="${iconClass} forecast-icon"></i>
         <p>${temp}°C</p>
       `;
       forecastGrid.appendChild(card);
     }
 
-    function changeBackground(weatherType) {
+    function changeBackground(weatherType, localHour) {
       const body = document.body;
-      if (weatherType.includes("cloud")) {
-        body.style.background = "linear-gradient(to bottom, #bdc3c7, #2c3e50)";
-      } else if (weatherType.includes("rain")) {
-        body.style.background = "linear-gradient(to bottom, #667db6, #0082c8)";
-      } else if (weatherType.includes("clear")) {
-        body.style.background = "linear-gradient(to bottom, #2980b9, #6dd5fa)";
-      } else if (weatherType.includes("snow")) {
-        body.style.background = "linear-gradient(to bottom, #e6dada, #274046)";
+      const isDay = localHour >= 6 && localHour < 18; // Day: 6 AM to 6 PM based on location's local time
+      const dayNightIcon = document.getElementById("day-night-icon");
+
+      if (isDay) {
+        // Day background
+        body.className = 'day';
+        body.style.background = "url('https://miro.medium.com/1*GsImz-edoeuqCMfKxDus0w.jpeg') no-repeat center center fixed";
+        body.style.backgroundSize = "cover";
+        dayNightIcon.className = "day";
+        dayNightIcon.innerHTML = '<i class="fas fa-sun"></i>';
       } else {
-        body.style.background = "linear-gradient(to bottom, #757f9a, #d7dde8)";
+        // Night background
+        body.className = 'night';
+        body.style.background = "url('https://videocdn.cdnpk.net/videos/fd28bdb5-98d7-55fd-b166-956c1ee789bb/horizontal/thumbnails/large.jpg') no-repeat center center fixed";
+        body.style.backgroundSize = "cover";
+        dayNightIcon.className = "night";
+        dayNightIcon.innerHTML = '<i class="fas fa-moon"></i>';
       }
     }
+
+    // Location button: get current location
+    locationBtn.addEventListener("click", () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            try {
+              // Reverse geocode to get city name
+              const geoURL = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
+              const geoRes = await fetch(geoURL);
+              const geoData = await geoRes.json();
+              if (geoData.length > 0) {
+                const city = geoData[0];
+                const displayName = `${city.name}${city.state ? ', ' + city.state : ''}, ${city.country}`;
+                getWeatherByCoords(lat, lon, displayName);
+              } else {
+                getWeatherByCoords(lat, lon, "Your Location");
+              }
+            } catch (err) {
+              if (err instanceof TypeError) {
+                console.error("Network error in reverse geocode:", err);
+              } else {
+                console.error("Reverse geocode error:", err);
+              }
+              getWeatherByCoords(lat, lon, "Your Location");
+            }
+            suggestionList.innerHTML = "";
+            showSuggestions(false);
+          },
+          (error) => {
+            console.error("Geolocation error:", error);
+            alert("Unable to get your location. Please allow location access.");
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    });
 
     // hide suggestions if clicked outside
     document.addEventListener("click", (e) => {
