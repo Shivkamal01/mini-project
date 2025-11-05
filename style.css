@@ -164,6 +164,38 @@ h1 {
   animation: pulse 1s infinite;
 }
 
+#voice-btn {
+  padding: 12px 15px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#voice-btn:hover {
+  background: #229954;
+  animation: pulse 1s infinite;
+}
+
+#unit-toggle {
+  padding: 12px 15px;
+  background: #f39c12;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#unit-toggle:hover {
+  background: #e67e22;
+  animation: pulse 1s infinite;
+}
+
 /* Suggestions Dropdown */
 #suggestion-list {
   position: absolute;
@@ -322,6 +354,14 @@ main {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Sun Times */
+.sun-times {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
 /* Details */
 .details {
   display: grid;
@@ -340,8 +380,12 @@ main {
   transition: background 0.3s;
 }
 
-.detail-box:hover {
+body.day .detail-box:hover {
   background: #e9ecef;
+}
+
+body.night .detail-box:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .detail-box i {
@@ -359,6 +403,35 @@ main {
 .detail-box span {
   font-weight: bold;
   color: inherit;
+}
+
+#aqi-box {
+  grid-column: span 2; /* Span two columns for better layout */
+}
+
+#aqi-box p {
+  margin: 2px 0;
+  font-size: 0.9rem;
+}
+
+#aqi-box .aqi-good {
+  color: #27ae60;
+}
+
+#aqi-box .aqi-moderate {
+  color: #f39c12;
+}
+
+#aqi-box .aqi-unhealthy {
+  color: #e74c3c;
+}
+
+#aqi-box .aqi-very-unhealthy {
+  color: #8e44ad;
+}
+
+#aqi-box .aqi-hazardous {
+  color: #7f1d1d;
 }
 
 /* Forecast */
@@ -457,6 +530,50 @@ main {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #0984e3;
+  animation: rotate 1s ease-in-out infinite;
+  margin: 20px auto;
+}
+
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  color: #e74c3c;
+}
+
+.error-message i {
+  font-size: 3rem;
+}
+
+.retry-btn {
+  padding: 8px 16px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.retry-btn:hover {
+  background: #c0392b;
 }
 
 /* Responsive */

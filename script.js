@@ -1,10 +1,14 @@
     const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
     const searchBtn = document.getElementById("search-btn");
     const locationBtn = document.getElementById("location-btn");
+    const voiceBtn = document.getElementById("voice-btn");
+    const unitToggle = document.getElementById("unit-toggle");
     const cityInput = document.getElementById("city-input");
     const suggestionList = document.getElementById("suggestion-list");
     const pinBtn = document.getElementById("pin-btn");
     const pinnedList = document.getElementById("pinned-list");
+
+    let isCelsius = true; // Default to Celsius
 
     const cityNameEl = document.querySelector(".city-name");
     const temperatureEl = document.querySelector(".temperature");
@@ -168,20 +172,30 @@
 
     // Fetch weather by coordinates (more reliable)
     async function getWeatherByCoords(lat, lon, displayName) {
+      const weatherSpinner = document.getElementById("weather-spinner");
+      const weatherContent = document.getElementById("weather-content");
+
+      // Show loading
+      weatherSpinner.style.display = "block";
+      weatherContent.style.display = "none";
+
       try {
-        const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+        const units = isCelsius ? 'metric' : 'imperial';
+        const weatherURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`;
         const res = await fetch(weatherURL);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Weather fetch failed");
 
         cityNameEl.textContent = displayName || `${data.name}, ${data.sys.country}`;
-        temperatureEl.textContent = `${Math.round(data.main.temp)}°C`;
+        const tempUnit = isCelsius ? '°C' : '°F';
+        const windUnit = isCelsius ? 'km/h' : 'mph';
+        temperatureEl.textContent = `${Math.round(data.main.temp)}${tempUnit}`;
         conditionEl.textContent = data.weather[0].main;
         humidityEl.textContent = `${data.main.humidity}%`;
-        windEl.textContent = `${(data.wind.speed * 3.6).toFixed(1)} km/h`; // m/s -> km/h
+        windEl.textContent = `${(data.wind.speed * (isCelsius ? 3.6 : 2.237)).toFixed(1)} ${windUnit}`; // Convert m/s to km/h or mph
         pressureEl.textContent = `${data.main.pressure} hPa`;
         visibilityEl.textContent = `${(data.visibility / 1000).toFixed(1)} km`; // meters to km
-        feelsLikeEl.textContent = `${Math.round(data.main.feels_like)}°C`;
+        feelsLikeEl.textContent = `${Math.round(data.main.feels_like)}${tempUnit}`;
 
         const iconCode = data.weather[0].icon;
         const iconClass = getWeatherIcon(iconCode);
@@ -198,39 +212,42 @@
 
         changeBackground(data.weather[0].main.toLowerCase(), localHour);
 
+        // Fetch AQI data
+        getAQI(lat, lon);
+
+        // Hide loading, show content
+        weatherSpinner.style.display = "none";
+        weatherContent.style.display = "block";
+
         // Forecast using forecast endpoint with lat/lon (we still use q optional but lat/lon is better)
         getForecastByCoords(lat, lon);
       } catch (err) {
         console.error("getWeatherByCoords error:", err);
-        if (err instanceof TypeError) {
-          cityNameEl.textContent = "Network error";
-          temperatureEl.textContent = "Check connection";
-          conditionEl.textContent = "--";
-          humidityEl.textContent = "--%";
-          windEl.textContent = "-- km/h";
-          pressureEl.textContent = "-- hPa";
-          visibilityEl.textContent = "-- km";
-          feelsLikeEl.textContent = "--°C";
-          weatherIcon.innerHTML = '<i class="fas fa-wifi"></i>';
-        } else {
-          cityNameEl.textContent = "City not found";
-          temperatureEl.textContent = "--°C";
-          conditionEl.textContent = "--";
-          humidityEl.textContent = "--%";
-          windEl.textContent = "-- km/h";
-          pressureEl.textContent = "-- hPa";
-          visibilityEl.textContent = "-- km";
-          feelsLikeEl.textContent = "--°C";
-          weatherIcon.innerHTML = '<i class="fas fa-question"></i>';
-        }
+        weatherSpinner.style.display = "none";
+        weatherContent.innerHTML = `
+          <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>${err instanceof TypeError ? "Network error. Please check your connection." : "Unable to load weather data."}</p>
+            <button class="retry-btn" onclick="getWeatherByCoords(${lat}, ${lon}, '${displayName}')">Retry</button>
+          </div>
+        `;
+        weatherContent.style.display = "block";
         forecastGrid.innerHTML = "";
       }
     }
 
     async function getForecastByCoords(lat, lon) {
+      const forecastSpinner = document.getElementById("forecast-spinner");
+      const forecastContent = document.getElementById("forecast-content");
+
+      // Show loading
+      forecastSpinner.style.display = "block";
+      forecastContent.style.display = "none";
+
       try {
         // Use the 5 day / 3 hour forecast endpoint with lat/lon via 'forecast' (it accepts lat & lon)
-        const forecastURL = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+        const units = isCelsius ? 'metric' : 'imperial';
+        const forecastURL = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`;
         const res = await fetch(forecastURL);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Forecast failed");
@@ -263,13 +280,21 @@
             if (Object.keys(shown).length >= 5) break;
           }
         }
+
+        // Hide loading, show content
+        forecastSpinner.style.display = "none";
+        forecastContent.style.display = "block";
       } catch (err) {
-        if (err instanceof TypeError) {
-          console.error("Network error in forecast:", err);
-        } else {
-          console.error("Forecast error:", err);
-        }
-        forecastGrid.innerHTML = "";
+        console.error("Forecast error:", err);
+        forecastSpinner.style.display = "none";
+        forecastContent.innerHTML = `
+          <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>${err instanceof TypeError ? "Network error. Unable to load forecast." : "Unable to load forecast data."}</p>
+            <button class="retry-btn" onclick="getForecastByCoords(${lat}, ${lon})">Retry</button>
+          </div>
+        `;
+        forecastContent.style.display = "block";
       }
     }
 
@@ -277,12 +302,13 @@
       const iconCode = item.weather[0].icon;
       const iconClass = getWeatherIcon(iconCode);
       const temp = Math.round(item.main.temp);
+      const tempUnit = isCelsius ? '°C' : '°F';
       const card = document.createElement("div");
       card.className = "day-card";
       card.innerHTML = `
         <p>${dayName}</p>
         <i class="${iconClass} forecast-icon"></i>
-        <p>${temp}°C</p>
+        <p>${temp}${tempUnit}</p>
       `;
       forecastGrid.appendChild(card);
     }
@@ -423,6 +449,103 @@
 
     // Load favorites on start
     displayFavorites();
+
+    // Unit toggle event
+    unitToggle.addEventListener("click", () => {
+      isCelsius = !isCelsius;
+      unitToggle.textContent = isCelsius ? "°C" : "°F";
+      localStorage.setItem('unitPreference', isCelsius ? 'celsius' : 'fahrenheit');
+      // Refresh current weather display
+      if (currentLat && currentLon) {
+        getWeatherByCoords(currentLat, currentLon, currentName);
+      }
+    });
+
+    // Load unit preference from localStorage
+    const savedUnit = localStorage.getItem('unitPreference');
+    if (savedUnit === 'fahrenheit') {
+      isCelsius = false;
+      unitToggle.textContent = "°F";
+    }
+
+    // Voice search event
+    voiceBtn.addEventListener("click", () => {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert("Voice search is not supported in this browser.");
+        return;
+      }
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        voiceBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+        voiceBtn.style.background = '#e74c3c';
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        cityInput.value = transcript;
+        resolveCityAndFetch(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        alert("Voice recognition failed. Please try again.");
+      };
+
+      recognition.onend = () => {
+        voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        voiceBtn.style.background = '#27ae60';
+      };
+
+      recognition.start();
+    });
+
+    // Function to get AQI data
+    async function getAQI(lat, lon) {
+      const aqiEl = document.getElementById("aqi");
+      const pm25El = document.getElementById("pm25");
+      const pm10El = document.getElementById("pm10");
+      const aqiBox = document.getElementById("aqi-box");
+
+      try {
+        const aqiURL = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+        const res = await fetch(aqiURL);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "AQI fetch failed");
+
+        const aqi = data.list[0].main.aqi;
+        const components = data.list[0].components;
+
+        // AQI levels: 1=Good, 2=Fair, 3=Moderate, 4=Poor, 5=Very Poor
+        const aqiLabels = {
+          1: { label: "Good", class: "aqi-good" },
+          2: { label: "Fair", class: "aqi-moderate" },
+          3: { label: "Moderate", class: "aqi-moderate" },
+          4: { label: "Poor", class: "aqi-unhealthy" },
+          5: { label: "Very Poor", class: "aqi-very-unhealthy" },
+          6: { label: "Hazardous", class: "aqi-hazardous" }
+        };
+
+        const aqiInfo = aqiLabels[aqi] || { label: "Unknown", class: "" };
+        aqiEl.textContent = aqiInfo.label;
+        aqiEl.className = aqiInfo.class;
+
+        pm25El.textContent = components.pm2_5.toFixed(1);
+        pm10El.textContent = components.pm10.toFixed(1);
+
+        // Remove loading text
+        aqiBox.querySelector("p").textContent = `AQI: ${aqiInfo.label}`;
+      } catch (err) {
+        console.error("AQI error:", err);
+        aqiEl.textContent = "N/A";
+        pm25El.textContent = "--";
+        pm10El.textContent = "--";
+        aqiBox.querySelector("p").textContent = "AQI: N/A";
+      }
+    }
 
     // Load default city on start
     getWeatherByCoords(40.7128, -74.0060, "New York, US");
