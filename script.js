@@ -3,6 +3,8 @@
     const locationBtn = document.getElementById("location-btn");
     const cityInput = document.getElementById("city-input");
     const suggestionList = document.getElementById("suggestion-list");
+    const pinBtn = document.getElementById("pin-btn");
+    const pinnedList = document.getElementById("pinned-list");
 
     const cityNameEl = document.querySelector(".city-name");
     const temperatureEl = document.querySelector(".temperature");
@@ -14,6 +16,8 @@
     const feelsLikeEl = document.getElementById("feels-like");
     const weatherIcon = document.querySelector(".weather-icon");
     const forecastGrid = document.getElementById("forecast-grid");
+
+    let currentLat, currentLon, currentName; // To store current location for pinning
 
     // Function to map OpenWeather icon codes to FontAwesome classes
     function getWeatherIcon(iconCode) {
@@ -183,6 +187,11 @@
         const iconClass = getWeatherIcon(iconCode);
         weatherIcon.innerHTML = `<i class="${iconClass}"></i>`;
 
+        // Store current location for pinning
+        currentLat = lat;
+        currentLon = lon;
+        currentName = displayName;
+
         // Calculate local time at the location using timezone offset
         const localTime = new Date((data.dt + data.timezone) * 1000);
         const localHour = localTime.getUTCHours();
@@ -347,6 +356,73 @@
         showSuggestions(false);
       }
     });
+
+    // Favorite locations management
+    function loadFavorites() {
+      const favorites = JSON.parse(localStorage.getItem('weatherFavorites')) || [];
+      return favorites;
+    }
+
+    function saveFavorites(favorites) {
+      localStorage.setItem('weatherFavorites', JSON.stringify(favorites));
+    }
+
+    function addFavorite(name, lat, lon) {
+      const favorites = loadFavorites();
+      if (favorites.length >= 3) {
+        alert("You can only pin up to 3 locations.");
+        return false;
+      }
+      // Check if already exists
+      const exists = favorites.some(fav => fav.name === name);
+      if (exists) {
+        alert("This location is already pinned.");
+        return false;
+      }
+      favorites.push({ name, lat, lon });
+      saveFavorites(favorites);
+      displayFavorites();
+      return true;
+    }
+
+    function removeFavorite(name) {
+      const favorites = loadFavorites();
+      const updated = favorites.filter(fav => fav.name !== name);
+      saveFavorites(updated);
+      displayFavorites();
+    }
+
+    function displayFavorites() {
+      const favorites = loadFavorites();
+      pinnedList.innerHTML = "";
+      favorites.forEach(fav => {
+        const item = document.createElement("div");
+        item.className = "pinned-item";
+        item.innerHTML = `
+          <button class="pinned-btn">${fav.name}</button>
+          <button class="remove-btn" title="Remove"><i class="fas fa-times"></i></button>
+        `;
+        item.querySelector(".pinned-btn").addEventListener("click", () => {
+          getWeatherByCoords(fav.lat, fav.lon, fav.name);
+        });
+        item.querySelector(".remove-btn").addEventListener("click", () => {
+          removeFavorite(fav.name);
+        });
+        pinnedList.appendChild(item);
+      });
+    }
+
+    // Pin button event
+    pinBtn.addEventListener("click", () => {
+      if (currentName && currentLat && currentLon) {
+        addFavorite(currentName, currentLat, currentLon);
+      } else {
+        alert("No location to pin. Please search for a city first.");
+      }
+    });
+
+    // Load favorites on start
+    displayFavorites();
 
     // Load default city on start
     getWeatherByCoords(40.7128, -74.0060, "New York, US");

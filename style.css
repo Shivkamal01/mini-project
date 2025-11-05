@@ -59,6 +59,61 @@ h1 {
   margin-bottom: 20px;
 }
 
+.pinned-locations {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pinned-locations h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: inherit;
+  font-weight: 600;
+}
+
+#pinned-list {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pinned-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pinned-btn {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.pinned-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.remove-btn {
+  padding: 4px 8px;
+  background: rgba(231, 76, 60, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.remove-btn:hover {
+  background: rgba(192, 57, 43, 0.8);
+}
+
 #suggestions-wrap {
   position: relative;
 }
@@ -115,8 +170,6 @@ h1 {
   top: 100%;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ddd;
   border-radius: 10px;
   max-height: 200px;
   overflow-y: auto;
@@ -125,15 +178,36 @@ h1 {
   display: none; /* Controlled by JS */
 }
 
+body.day #suggestion-list {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+}
+
+body.night #suggestion-list {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #555;
+}
+
 .suggestion-item {
   padding: 10px 15px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
   transition: background 0.2s;
 }
 
-.suggestion-item:hover {
+body.day .suggestion-item {
+  border-bottom: 1px solid #eee;
+}
+
+body.day .suggestion-item:hover {
   background: rgba(9, 132, 227, 0.1);
+}
+
+body.night .suggestion-item {
+  border-bottom: 1px solid #444;
+}
+
+body.night .suggestion-item:hover {
+  background: rgba(9, 132, 227, 0.2);
 }
 
 .suggestion-item:last-child {
@@ -145,9 +219,24 @@ h1 {
   font-weight: 500;
 }
 
+body.day .suggestion-item span {
+  color: #333;
+}
+
+body.night .suggestion-item span {
+  color: #fff;
+}
+
 .suggestion-item small {
-  color: #666;
   font-size: 0.8rem;
+}
+
+body.day .suggestion-item small {
+  color: #666;
+}
+
+body.night .suggestion-item small {
+  color: #ccc;
 }
 
 /* Main Content */
@@ -215,6 +304,22 @@ main {
   color: inherit;
   margin-bottom: 20px;
   font-weight: 600;
+}
+
+#pin-btn {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-bottom: 20px;
+}
+
+#pin-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Details */
