@@ -8,6 +8,9 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
     const conditionEl = document.querySelector(".condition");
     const humidityEl = document.getElementById("humidity");
     const windEl = document.getElementById("wind");
+    const pressureEl = document.getElementById("pressure");
+    const visibilityEl = document.getElementById("visibility");
+    const feelsLikeEl = document.getElementById("feels-like");
     const weatherIcon = document.querySelector(".weather-icon");
     const forecastGrid = document.getElementById("forecast-grid");
 
@@ -128,6 +131,9 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
         conditionEl.textContent = data.weather[0].main;
         humidityEl.textContent = `${data.main.humidity}%`;
         windEl.textContent = `${(data.wind.speed * 3.6).toFixed(1)} km/h`; // m/s -> km/h
+        pressureEl.textContent = `${data.main.pressure} hPa`;
+        visibilityEl.textContent = `${(data.visibility / 1000).toFixed(1)} km`; // meters to km
+        feelsLikeEl.textContent = `${Math.round(data.main.feels_like)}°C`;
 
         const iconCode = data.weather[0].icon;
         weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
@@ -143,6 +149,9 @@ const apiKey = "b1fd6e14799699504191b6bdbcadfc35"; // replace if you want
         conditionEl.textContent = "--";
         humidityEl.textContent = "--%";
         windEl.textContent = "-- km/h";
+        pressureEl.textContent = "-- hPa";
+        visibilityEl.textContent = "-- km";
+        feelsLikeEl.textContent = "--°C";
         weatherIcon.src = "https://cdn-icons-png.flaticon.com/512/565/565860.png";
         forecastGrid.innerHTML = "";
       }
