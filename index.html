@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Forecast</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Weather Forecast</h1>
+
+      <div style="display: flex; margin-top:8px; justify-content: center; gap:10px; align-items:center;">
+        <div class="suggestions" id="suggestions-wrap">
+          <input id="city-input" type="text" placeholder="Enter city name..." autocomplete="off" />
+          <div id="suggestion-list" aria-hidden="true"></div>
+        </div>
+        <button id="search-btn">Search</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="weather-card">
+        <img src="https://cdn-icons-png.flaticon.com/512/1163/1163661.png" alt="Weather Icon" class="weather-icon">
+        <h2 class="city-name">New York</h2>
+        <p class="temperature">25°C</p>
+        <p class="condition">Cloudy</p>
+
+        <div class="details">
+          <div class="detail-box">
+            <img src="https://cdn-icons-png.flaticon.com/512/4814/4814268.png" alt="Humidity">
+            <p>Humidity: <span id="humidity">68%</span></p>
+          </div>
+          <div class="detail-box">
+            <img src="https://cdn-icons-png.flaticon.com/512/553/553416.png" alt="Wind">
+            <p>Wind: <span id="wind">12 km/h</span></p>
+          </div>
+        </div>
+      </div>
+
+      <section class="forecast">
+        <h3>Next 5 Days</h3>
+        <div class="forecast-grid" id="forecast-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
